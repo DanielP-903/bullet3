@@ -16,11 +16,13 @@
 #include "btQuickprof.h"
 #include "btThreads.h"
 
+#if defined PSVita
 #ifdef __CELLOS_LV2__
 #include <sys/sys_time.h>
 #include <sys/time_util.h>
 #include <stdio.h>
 #endif
+#endif // PSVita
 
 #if defined(SUNOS) || defined(__SUNOS__)
 #include <stdio.h>
@@ -52,7 +54,10 @@
 #include <time.h>
 
 #else  //_WIN32
+
+#if defined PSVita
 #include <sys/time.h>
+#endif // PSVita
 
 #ifdef BT_LINUX_REALTIME
 //required linking against rt (librt)
@@ -71,7 +76,10 @@ struct btClockData
 	LARGE_INTEGER mStartTime;
 #else
 #ifdef __CELLOS_LV2__
+#if defined PSVita
 	uint64_t mStartTime;
+#endif // PSVita
+
 #else
 #ifdef __APPLE__
 	uint64_t mStartTimeNano;
@@ -116,12 +124,14 @@ void btClock::reset()
 	m_data->mStartTick = GetTickCount64();
 #else
 #ifdef __CELLOS_LV2__
+#if defined PSVita
 
 	typedef uint64_t ClockSize;
 	ClockSize newTime;
 	//__asm __volatile__( "mftb %0" : "=r" (newTime) : : "memory");
 	SYS_TIMEBASE_GET(newTime);
 	m_data->mStartTime = newTime;
+#endif
 #else
 #ifdef __APPLE__
 	m_data->mStartTimeNano = mach_absolute_time();
@@ -148,6 +158,8 @@ unsigned long long int btClock::getTimeMilliseconds()
 #else
 
 #ifdef __CELLOS_LV2__
+#if defined PSVita
+
 	uint64_t freq = sys_time_get_timebase_frequency();
 	double dFreq = ((double)freq) / 1000.0;
 	typedef uint64_t ClockSize;
@@ -156,6 +168,7 @@ unsigned long long int btClock::getTimeMilliseconds()
 	//__asm __volatile__( "mftb %0" : "=r" (newTime) : : "memory");
 
 	return (unsigned long int)((double(newTime - m_data->mStartTime)) / dFreq);
+#endif
 #else
 
 	struct timeval currentTime;
@@ -184,6 +197,8 @@ unsigned long long int btClock::getTimeMicroseconds()
 #else
 
 #ifdef __CELLOS_LV2__
+#if defined PSVita
+
 	uint64_t freq = sys_time_get_timebase_frequency();
 	double dFreq = ((double)freq) / 1000000.0;
 	typedef uint64_t ClockSize;
@@ -192,6 +207,7 @@ unsigned long long int btClock::getTimeMicroseconds()
 	SYS_TIMEBASE_GET(newTime);
 
 	return (unsigned long int)((double(newTime - m_data->mStartTime)) / dFreq);
+#endif
 #else
 
 	struct timeval currentTime;
@@ -218,6 +234,8 @@ unsigned long long int btClock::getTimeNanoseconds()
 #else
 
 #ifdef __CELLOS_LV2__
+#if defined PSVita
+
 	uint64_t freq = sys_time_get_timebase_frequency();
 	double dFreq = ((double)freq) / 1e9;
 	typedef uint64_t ClockSize;
@@ -226,6 +244,7 @@ unsigned long long int btClock::getTimeNanoseconds()
 	SYS_TIMEBASE_GET(newTime);
 
 	return (unsigned long int)((double(newTime - m_data->mStartTime)) / dFreq);
+#endif
 #else
 #ifdef __APPLE__
 	uint64_t ticks = mach_absolute_time() - m_data->mStartTimeNano;
